@@ -1,6 +1,7 @@
 # Environment Variables
 .env
 .env.prod
+cookies.txt
 # Byte-compiled / Cached files
 **/__pycache__/
 *.py[cod]
