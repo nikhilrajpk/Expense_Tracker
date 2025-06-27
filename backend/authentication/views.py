@@ -1,9 +1,10 @@
 from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from .serializers import UserRegistrationSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.conf import settings
+from django.contrib.auth.models import User
 
 class RegisterView(APIView):
     def post(self, request):
@@ -38,3 +39,22 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         response.data = {"message":"Login successful"}
         
         return response
+    
+class UserView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        return Response({
+            'id':user.id,
+            'username':user.username,
+            'email':user.email,
+            'is_staff':user.is_staff
+        })
+        
+class UsersListView(APIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+
+    def get(self, request):
+        users = User.objects.all().values('id', 'username')
+        return Response(list(users))
