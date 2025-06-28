@@ -12,6 +12,7 @@ function Admin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({ currentPage: 1, totalCount: 0, totalPages: 0 });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state) => state.auth.user);
@@ -21,14 +22,19 @@ function Admin() {
       fetchExpenses();
       fetchUsers();
     }
-  }, [filters, user?.is_staff]);
+  }, [filters, user?.is_staff, pagination.currentPage]);
 
   const fetchExpenses = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams(filters).toString();
+      const params = new URLSearchParams({ ...filters, page: pagination.currentPage }).toString();
       const response = await axios.get(`/api/expenses/?${params}`, { withCredentials: true });
-      setExpenses(response.data);
+      setExpenses(response.data.results);
+      setPagination({
+        currentPage: pagination.currentPage,
+        totalCount: response.data.count,
+        totalPages: Math.ceil(response.data.count / 10),
+      });
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to fetch expenses');
     } finally {
@@ -48,6 +54,7 @@ function Admin() {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters({ ...filters, [name]: value });
+    setPagination({ ...pagination, currentPage: 1 });
   };
 
   const handleDelete = async (id) => {
@@ -60,6 +67,10 @@ function Admin() {
         setError(err.response?.data?.detail || 'Failed to delete expense');
       }
     }
+  };
+
+  const handlePageChange = (page) => {
+    setPagination({ ...pagination, currentPage: page });
   };
 
   if (!user?.is_staff) return <div className="text-center p-4">Access denied. Admins only.</div>;
@@ -138,45 +149,66 @@ function Admin() {
               <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-gray-600">
-                    <th className="p-3">Title</th>
-                    <th className="p-3">Amount</th>
-                    <th className="p-3">Category</th>
-                    <th className="p-3">Date</th>
-                    <th className="p-3">User</th>
-                    <th className="p-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expenses.map((expense) => (
-                    <tr key={expense.id} className="border-t">
-                      <td className="p-3">{expense.title}</td>
-                      <td className="p-3">₹{expense.amount}</td>
-                      <td className="p-3">{expense.category}</td>
-                      <td className="p-3">{expense.date}</td>
-                      <td className="p-3">{expense.username}</td>
-                      <td className="p-3">
-                        <button
-                          onClick={() => navigate(`/expense/${expense.id}`)}
-                          className="text-blue-600 hover:text-blue-800 mr-2"
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(expense.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </td>
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-gray-600">
+                      <th className="p-3">Title</th>
+                      <th className="p-3">Amount</th>
+                      <th className="p-3">Category</th>
+                      <th className="p-3">Date</th>
+                      <th className="p-3">User</th>
+                      <th className="p-3">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {expenses.map((expense) => (
+                      <tr key={expense.id} className="border-t">
+                        <td className="p-3">{expense.title}</td>
+                        <td className="p-3">₹{expense.amount}</td>
+                        <td className="p-3">{expense.category}</td>
+                        <td className="p-3">{expense.date}</td>
+                        <td className="p-3">{expense.username}</td>
+                        <td className="p-3">
+                          <button
+                            onClick={() => navigate(`/expense/${expense.id}`)}
+                            className="text-blue-600 hover:text-blue-800 mr-2"
+                          >
+                            <Edit className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(expense.id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-between mt-4">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-xl disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-gray-600">
+                  Page {pagination.currentPage} of {pagination.totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-xl disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
