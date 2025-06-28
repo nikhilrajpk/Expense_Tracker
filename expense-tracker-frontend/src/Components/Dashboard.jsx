@@ -6,6 +6,7 @@ import { fetchUser } from '../store/authSlice';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 import { AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { showToast } from '../store/toastSlice';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -67,6 +68,7 @@ function Dashboard() {
       setFormData({ title: '', amount: '', category: 'food', date: '', notes: '' });
       fetchExpenses();
       fetchSummary();
+      dispatch(showToast({ message: 'Expense created.', type: 'success' }));
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to create expense');
     } finally {
@@ -80,6 +82,7 @@ function Dashboard() {
         await axios.delete(`/api/expenses/${id}/`, { withCredentials: true });
         fetchExpenses();
         fetchSummary();
+        dispatch(showToast({ message: 'Expense deleted successfully.', type: 'success' }));
       } catch (err) {
         setError(err.response?.data?.detail || 'Failed to delete expense');
       }
@@ -239,16 +242,18 @@ function Dashboard() {
                     <th className="p-3">Amount</th>
                     <th className="p-3">Category</th>
                     <th className="p-3">Date</th>
+                    {user.is_staff && <th className="p-3">Username</th>}
                     <th className="p-3">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {expenses.map((expense) => (
                     <tr key={expense.id} className="border-t">
-                      <td className="p-3">{expense.title}</td>
-                      <td className="p-3">${expense.amount}</td>
+                      <td className="p-3" onClick={() => navigate(`/expense/${expense.id}`)}>{expense.title}</td>
+                      <td className="p-3">₹{expense.amount}</td>
                       <td className="p-3">{expense.category}</td>
                       <td className="p-3">{expense.date}</td>
+                      {user.is_staff && <td className="p-3">{expense.username}</td>}
                       <td className="p-3">
                         <button
                           onClick={() => navigate(`/expense/${expense.id}`)}

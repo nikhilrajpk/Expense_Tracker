@@ -13,20 +13,24 @@ class ExpenseListCreateView(generics.ListCreateAPIView):
     serializer_class = ExpenseSerializer
     permission_classes = [permissions.IsAuthenticated]
     
-    def get_queryset(self):
-        # Admin see all data, normal users see their own.
-        if self.request.user.is_staff:
-            return Expense.objects.all()
-        return Expense.objects.filter(user=self.request.user)
+    # def get_queryset(self):
+    #     # Admin see all data, normal users see their own.
+    #     if self.request.user.is_staff:
+    #         return Expense.objects.all()
+    #     return Expense.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
         # Automatically assign the authenticated user to expense.
         serializer.save(user=self.request.user)
         
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # Applying filters
+        # Admin see all data, normal users see their own.
+        if self.request.user.is_staff:
+            queryset = Expense.objects.all()
+        else:
+            queryset = Expense.objects.filter(user=self.request.user)
         
+        # Applying filters
         start_date = self.request.query_params.get('start_date')
         end_date = self.request.query_params.get('end_date')
         category = self.request.query_params.get('category')

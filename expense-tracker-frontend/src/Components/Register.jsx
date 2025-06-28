@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { register, selectAuthLoading, selectAuthError, clearError } from '../store/authSlice';
 import { Eye, EyeOff, User, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { showToast } from '../store/toastSlice';
 
 function Register(){
 const [formData, setFormData] = useState({
@@ -105,8 +106,10 @@ const [formData, setFormData] = useState({
     if (!validateForm()) return;
     try {
       await dispatch(register(formData)).unwrap();
+      dispatch(showToast({ message: 'Registration successful! Please log in.', type: 'success' }));
       navigate('/login');
     } catch (err) {
+      dispatch(showToast({ message: err || 'Registration failed', type: 'error' }));
       console.error('Registration failed:', err);
     }
   };

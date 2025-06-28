@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { fetchUser } from '../store/authSlice';
 import { AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { showToast } from '../store/toastSlice';
 
 function Admin() {
   const [expenses, setExpenses] = useState([]);
@@ -16,12 +17,11 @@ function Admin() {
   const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
-    dispatch(fetchUser());
     if (user?.is_staff) {
       fetchExpenses();
       fetchUsers();
     }
-  }, [dispatch, user]);
+  }, [filters, user?.is_staff]);
 
   const fetchExpenses = async () => {
     setLoading(true);
@@ -54,6 +54,7 @@ function Admin() {
     if (window.confirm('Are you sure you want to delete this expense?')) {
       try {
         await axios.delete(`/api/expenses/${id}/`, { withCredentials: true });
+        dispatch(showToast({ message: 'Expense deleted successfully.', type: 'success' }));
         fetchExpenses();
       } catch (err) {
         setError(err.response?.data?.detail || 'Failed to delete expense');
@@ -153,10 +154,10 @@ function Admin() {
                   {expenses.map((expense) => (
                     <tr key={expense.id} className="border-t">
                       <td className="p-3">{expense.title}</td>
-                      <td className="p-3">${expense.amount}</td>
+                      <td className="p-3">₹{expense.amount}</td>
                       <td className="p-3">{expense.category}</td>
                       <td className="p-3">{expense.date}</td>
-                      <td className="p-3">{expense.user}</td>
+                      <td className="p-3">{expense.username}</td>
                       <td className="p-3">
                         <button
                           onClick={() => navigate(`/expense/${expense.id}`)}

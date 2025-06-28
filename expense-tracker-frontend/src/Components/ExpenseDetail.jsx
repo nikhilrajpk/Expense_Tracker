@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AlertCircle } from 'lucide-react';
+import { showToast } from '../store/toastSlice';
+import { useDispatch } from 'react-redux';
 
 function ExpenseDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch()
   const [expense, setExpense] = useState(null);
   const [formData, setFormData] = useState({ title: '', amount: '', category: '', date: '', notes: '' });
   const [loading, setLoading] = useState(false);
@@ -44,7 +47,8 @@ function ExpenseDetail() {
     setLoading(true);
     try {
       await axios.put(`/api/expenses/${id}/`, formData, { withCredentials: true });
-      navigate('/dashboard');
+      dispatch(showToast({ message: 'Expense updated.', type: 'success' }));
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to update expense');
     } finally {
@@ -56,7 +60,8 @@ function ExpenseDetail() {
     if (window.confirm('Are you sure you want to delete this expense?')) {
       try {
         await axios.delete(`/api/expenses/${id}/`, { withCredentials: true });
-        navigate('/dashboard');
+        dispatch(showToast({ message: 'Expense deleted successfully.', type: 'success' }));
+        navigate('/');
       } catch (err) {
         setError(err.response?.data?.detail || 'Failed to delete expense');
       }

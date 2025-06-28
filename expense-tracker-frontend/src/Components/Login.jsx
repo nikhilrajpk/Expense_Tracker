@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, selectAuthLoading, selectAuthError, clearError } from '../store/authSlice';
 import { Eye, EyeOff, User, Lock, AlertCircle } from 'lucide-react';
+import { showToast } from '../store/toastSlice';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -71,8 +72,10 @@ function Login() {
     if (!validateForm()) return;
     try {
       await dispatch(login(formData)).unwrap();
+      dispatch(showToast({ message: 'Login successful!', type: 'success' }));
       navigate('/dashboard');
     } catch (err) {
+      dispatch(showToast({ message: err || 'Login failed', type: 'error' }));
       console.error('Login failed:', err);
     }
   };

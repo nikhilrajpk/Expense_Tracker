@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { hideToast } from '../store/slices/toastSlice';
+import { hideToast } from '../store/toastSlice';
 import { useDispatch } from 'react-redux';
 
 const Toast = ({ message, type = "success", duration = 3000 }) => {
